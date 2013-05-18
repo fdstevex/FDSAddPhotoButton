@@ -8,13 +8,14 @@
 #import "FDSAddPhotoButton.h"
 #import <QuartzCore/QuartzCore.h>
 
-@interface FDSAddPhotoButton () <UINavigationControllerDelegate, UIImagePickerControllerDelegate, UIActionSheetDelegate>
+@interface FDSAddPhotoButton () <UINavigationControllerDelegate, UIImagePickerControllerDelegate, UIActionSheetDelegate, UIPopoverControllerDelegate>
 
 @property (strong, nonatomic) CAShapeLayer *borderLayer;
 @property (strong, nonatomic) UIView *frameView;
 @property (strong, nonatomic) UIImageView *photoView;
 @property (strong, nonatomic) UILabel *editLabel;
-
+@property (strong, nonatomic) UIPopoverController *currentPopover;
+@property (strong, nonatomic) UIActionSheet *currentActionSheet;
 @end
 
 @implementation FDSAddPhotoButton
@@ -39,6 +40,10 @@
 
 - (void)finishInitialization
 {
+    self.titleLabel.lineBreakMode = NSLineBreakByWordWrapping;
+    self.titleLabel.font = [UIFont boldSystemFontOfSize:14];
+    self.titleLabel.textAlignment = NSTextAlignmentCenter;
+    
     //Border
     self.borderLayer = [CAShapeLayer layer];
     self.borderLayer.fillColor = [[UIColor clearColor] CGColor];
@@ -164,22 +169,34 @@
 
 - (void) pickPhoto
 {
+    if (self.currentPopover != nil) {
+        [self.currentPopover dismissPopoverAnimated:YES];
+        self.currentPopover = nil;
+        return;
+    }
+    
     if (self.photo != nil) {
-        UIActionSheet *sheet = [[UIActionSheet alloc] initWithTitle:@"Selected Photo"
+        self.currentActionSheet = [[UIActionSheet alloc] initWithTitle:@"Selected Photo"
                                                            delegate:self
                                                   cancelButtonTitle:@"Cancel"
                                              destructiveButtonTitle:nil
                                                   otherButtonTitles:@"Remove Photo", nil];
-        [sheet showFromRect:self.bounds inView:self animated:YES];
+        [self.currentActionSheet showFromRect:self.bounds inView:self animated:YES];
     } else {
         UIImagePickerController *picker = [[UIImagePickerController alloc] init];
         picker.delegate = self;
         picker.sourceType = UIImagePickerControllerSourceTypeSavedPhotosAlbum;
-        [self.parentViewController presentViewController:picker
-                                                animated:YES
-                                              completion:^{
-                                                  
-                                              }];
+        
+        if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) {
+            self.currentPopover = [[UIPopoverController alloc] initWithContentViewController:picker];
+            [self.currentPopover presentPopoverFromRect:self.bounds
+                                                 inView:self
+                               permittedArrowDirections:UIPopoverArrowDirectionAny
+                                               animated:YES];
+        } else {
+            [self.parentViewController presentViewController:picker animated:YES completion:nil];
+        }
+        
     }
 }
 
@@ -196,6 +213,18 @@
     if (self.addPhotoDelegate) {
         [self.addPhotoDelegate addPhotoButton:self didSelectPhoto:nil];
     }
+    
+    if (self.currentPopover) {
+        [self.currentPopover dismissPopoverAnimated:YES];
+        self.currentPopover = nil;
+    }
+}
+
+- (void)popoverControllerDidDismissPopover:(UIPopoverController *)popoverController
+{
+    if (self.currentPopover == popoverController) {
+        self.currentPopover = nil;
+    }
 }
 
 #pragma mark - UIActionSheetDelegate
@@ -210,6 +239,8 @@
             [self.addPhotoDelegate addPhotoButton:self didSelectPhoto:nil];
         }
     }
+    
+    self.currentActionSheet = nil;
 }
 
 @end

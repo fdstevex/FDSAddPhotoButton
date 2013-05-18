@@ -16,7 +16,7 @@
 @interface FDSAddPhotoButton : UIButton
 
 @property (strong, nonatomic) UIImage *photo;
-@property (weak, nonatomic) id<FDSAddPhotoButtonDelegate> addPhotoDelegate;
+@property (weak, nonatomic) IBOutlet id<FDSAddPhotoButtonDelegate> addPhotoDelegate;
 @property (weak, nonatomic) IBOutlet UIViewController *parentViewController;
 
 @end

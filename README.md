@@ -12,7 +12,9 @@ To use:
 
 * Add the .m and .h files to your project.
 * Drop a button in Interface Builder.  Set the class to FDSAddPhotoButton, and the size to roughly square (64 points sqaure is a good size).
+* Set the title label for the button to the text you'd like to use (typically, "add photo", but with a newline in between those two words - hold alt and tap Enter while editing to insert the newline).
 * Set the parentViewController and addPhotoDelegate properties, either in Interface Builder or in code.
+* Respond to the delegate method to handle the user selecting a photo.
 
 Limitations:
 
