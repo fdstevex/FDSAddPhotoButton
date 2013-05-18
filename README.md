@@ -5,6 +5,9 @@ A simple iOS Add Photo button, modeled after the photo in the Contacts app.
 
 The button either displays "add photo", with a dotted line border, or shows the photo in a shadowed photo frame with an edit label.  A delegate callback informs the client app when the user either adds or removes a photo.
 
+![Add Photo](/screenshots/addphoto.png "Add Photo")
+![Edit Photo](/screenshots/editphoto.png "Edit Photo")
+
 To use:
 
 * Add the .m and .h files to your project.

@@ -74,7 +74,7 @@
     self.editLabel.font = [UIFont systemFontOfSize:13];
     self.editLabel.textAlignment = NSTextAlignmentCenter;
     self.editLabel.opaque = NO;
-    self.editLabel.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.5];
+    self.editLabel.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.3];
     [self.editLabel sizeToFit];
     [self addSubview:self.editLabel];
     
