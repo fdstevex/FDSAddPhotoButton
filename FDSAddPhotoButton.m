@@ -225,7 +225,7 @@
 
     // Notify the delegate
     if (self.addPhotoDelegate) {
-        [self.addPhotoDelegate addPhotoButton:self didSelectPhoto:nil];
+        [self.addPhotoDelegate addPhotoButton:self didSelectPhoto:self.photo];
     }
     
     if (self.currentPopover) {
