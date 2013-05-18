@@ -40,6 +40,10 @@
 
 - (void)finishInitialization
 {
+    self.adjustsImageWhenHighlighted = NO;
+    
+    [self setTitleColor:[self titleColorForState:UIControlStateNormal] forState:UIControlStateHighlighted];
+
     self.titleLabel.lineBreakMode = NSLineBreakByWordWrapping;
     self.titleLabel.font = [UIFont boldSystemFontOfSize:14];
     self.titleLabel.textAlignment = NSTextAlignmentCenter;
@@ -69,6 +73,8 @@
     // The photo itself
     self.photoView = [[UIImageView alloc] init];
     self.photoView.hidden = YES;
+    self.photoView.contentMode = UIViewContentModeScaleAspectFill;
+    self.photoView.clipsToBounds = YES;
     [self addSubview:self.photoView];
     
     // The "edit" label on the photo
@@ -189,6 +195,7 @@
         
         if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) {
             self.currentPopover = [[UIPopoverController alloc] initWithContentViewController:picker];
+            self.currentPopover.delegate = self;
             [self.currentPopover presentPopoverFromRect:self.bounds
                                                  inView:self
                                permittedArrowDirections:UIPopoverArrowDirectionAny
@@ -197,6 +204,13 @@
             [self.parentViewController presentViewController:picker animated:YES completion:nil];
         }
         
+    }
+}
+
+- (void)popoverControllerDidDismissPopover:(UIPopoverController *)popoverController
+{
+    if (popoverController == self.currentPopover) {
+        self.currentPopover = nil;
     }
 }
 
@@ -216,13 +230,6 @@
     
     if (self.currentPopover) {
         [self.currentPopover dismissPopoverAnimated:YES];
-        self.currentPopover = nil;
-    }
-}
-
-- (void)popoverControllerDidDismissPopover:(UIPopoverController *)popoverController
-{
-    if (self.currentPopover == popoverController) {
         self.currentPopover = nil;
     }
 }
