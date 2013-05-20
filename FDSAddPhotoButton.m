@@ -92,6 +92,11 @@
     [self addTarget:self action:@selector(buttonTapped:) forControlEvents:UIControlEventTouchUpInside];
 }
 
+- (CGSize)intrinsicContentSize
+{
+    return CGSizeMake(64, 64);
+}
+
 // From http://www.cocoanetics.com/2010/02/drawing-rounded-rectangles/
 
 - (CGPathRef) newPathForRoundedRect:(CGRect)rect radius:(CGFloat)radius
