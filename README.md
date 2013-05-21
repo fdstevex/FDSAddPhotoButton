@@ -3,7 +3,7 @@ FDSAddPhotoButton
 
 A simple iOS Add Photo button, modeled after the photo in the Contacts app.  
 
-The button either displays "add photo", with a dotted line border, or shows the photo in a shadowed photo frame with an edit label.  A delegate callback informs the client app when the user either adds or removes a photo.
+The button either displays "add photo", with a dotted line border, or shows the photo in a shadowed photo frame with an edit label.  The user can choose a photo from their device, or use the camera to take a photo.  A delegate callback informs the client app when the user either adds or removes a photo.
 
 ![Add Photo](/screenshots/addphoto.png "Add Photo")
 ![Edit Photo](/screenshots/editphoto.png "Edit Photo")
@@ -19,6 +19,8 @@ To use:
 Limitations:
 
 * Doesn't let the user move or crop the photo.
-* Doesn't let the user take a photo; they must select a photo from their camera roll.
 
+Note that if your iPad application runs in Landscape mode, you will run into a crash when the user attempts to view the photo library.  One workaround is described here:
+
+http://stackoverflow.com/questions/12522491/crash-on-presenting-uiimagepickercontroller-under-ios-6-0
 

@@ -7,6 +7,11 @@
 
 #import "FDSAddPhotoButton.h"
 #import <QuartzCore/QuartzCore.h>
+#import <MobileCoreServices/MobileCoreServices.h>
+
+#define TAKEPHOTO_STRING NSLocalizedString(@"Take Photo", nil)
+#define CHOOSEPHOTO_STRING NSLocalizedString(@"Choose Photo", nil)
+#define DELETEPHOTO_STRING NSLocalizedString(@"Delete Photo", nil)
 
 @interface FDSAddPhotoButton () <UINavigationControllerDelegate, UIImagePickerControllerDelegate, UIActionSheetDelegate, UIPopoverControllerDelegate>
 
@@ -73,8 +78,9 @@
     // The photo itself
     self.photoView = [[UIImageView alloc] init];
     self.photoView.hidden = YES;
-    self.photoView.contentMode = UIViewContentModeScaleAspectFill;
+    self.photoView.contentMode = UIViewContentModeScaleAspectFit;
     self.photoView.clipsToBounds = YES;
+    self.photoView.backgroundColor = [UIColor colorWithWhite:0.9 alpha:1.0];
     [self addSubview:self.photoView];
     
     // The "edit" label on the photo
@@ -175,40 +181,65 @@
 
 - (void)buttonTapped:(id)sender
 {
-    [self pickPhoto];
-}
-
-- (void) pickPhoto
-{
     if (self.currentPopover != nil) {
         [self.currentPopover dismissPopoverAnimated:YES];
         self.currentPopover = nil;
         return;
     }
+
+    BOOL isCameraAvailable = [UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera];
+    BOOL isPhotoLibraryAvailable = [UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypePhotoLibrary];
     
+    if (self.photo == nil && !isCameraAvailable && isPhotoLibraryAvailable) {
+        // This is a common case that results in a menu with only one item, so skip the menu
+        [self acquirePhotoFromSource:UIImagePickerControllerSourceTypePhotoLibrary];
+        return;
+    }
+    
+    BOOL isPad = [UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad;
+    
+    self.currentActionSheet = [[UIActionSheet alloc] initWithTitle:nil
+                                                          delegate:self
+                                                 cancelButtonTitle:isPad ? nil : NSLocalizedString(@"Cancel", nil)
+                                            destructiveButtonTitle:nil
+                                                 otherButtonTitles:nil];
+    
+    if (isCameraAvailable) {
+        [self.currentActionSheet addButtonWithTitle:TAKEPHOTO_STRING];
+    }
+    if (isPhotoLibraryAvailable) {
+        [self.currentActionSheet addButtonWithTitle:CHOOSEPHOTO_STRING];
+    }
+
     if (self.photo != nil) {
-        self.currentActionSheet = [[UIActionSheet alloc] initWithTitle:@"Selected Photo"
-                                                           delegate:self
-                                                  cancelButtonTitle:@"Cancel"
-                                             destructiveButtonTitle:nil
-                                                  otherButtonTitles:@"Remove Photo", nil];
-        [self.currentActionSheet showFromRect:self.bounds inView:self animated:YES];
+        self.currentActionSheet.destructiveButtonIndex = [self.currentActionSheet addButtonWithTitle:DELETEPHOTO_STRING];
+    }
+    
+    [self.currentActionSheet showFromRect:self.bounds inView:self animated:YES];
+}
+
+
+- (void)acquirePhotoFromSource:(UIImagePickerControllerSourceType)sourceType
+{
+    UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+    picker.delegate = self;
+    picker.sourceType = sourceType;
+    picker.mediaTypes = [[NSArray alloc] initWithObjects:(NSString *)kUTTypeImage, nil];
+
+    BOOL fullScreen = YES;
+    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad && sourceType != UIImagePickerControllerSourceTypeCamera) {
+        fullScreen = NO;
+    }
+    
+    if (!fullScreen) {
+        self.currentPopover = [[UIPopoverController alloc] initWithContentViewController:picker];
+        self.currentPopover.delegate = self;
+        [self.currentPopover presentPopoverFromRect:self.bounds
+                                             inView:self
+                           permittedArrowDirections:UIPopoverArrowDirectionAny
+                                           animated:YES];
     } else {
-        UIImagePickerController *picker = [[UIImagePickerController alloc] init];
-        picker.delegate = self;
-        picker.sourceType = UIImagePickerControllerSourceTypeSavedPhotosAlbum;
-        
-        if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) {
-            self.currentPopover = [[UIPopoverController alloc] initWithContentViewController:picker];
-            self.currentPopover.delegate = self;
-            [self.currentPopover presentPopoverFromRect:self.bounds
-                                                 inView:self
-                               permittedArrowDirections:UIPopoverArrowDirectionAny
-                                               animated:YES];
-        } else {
-            [self.parentViewController presentViewController:picker animated:YES completion:nil];
-        }
-        
+        [self.parentViewController presentViewController:picker animated:YES completion:nil];
     }
 }
 
@@ -244,11 +275,22 @@
 - (void)actionSheet:(UIActionSheet *)actionSheet didDismissWithButtonIndex:(NSInteger)buttonIndex
 {
     if (buttonIndex != actionSheet.cancelButtonIndex) {
-        self.photo = nil;
-
-        // Notify the delegate that the photo was removed
-        if (self.addPhotoDelegate) {
-            [self.addPhotoDelegate addPhotoButton:self didSelectPhoto:nil];
+        if (buttonIndex == actionSheet.destructiveButtonIndex) {
+            self.photo = nil;
+            
+            // Notify the delegate that the photo was removed
+            if (self.addPhotoDelegate) {
+                [self.addPhotoDelegate addPhotoButton:self didSelectPhoto:nil];
+            }
+            
+        } else {
+            NSString *title = [actionSheet buttonTitleAtIndex:buttonIndex];
+            if ([title isEqualToString:TAKEPHOTO_STRING]) {
+                [self acquirePhotoFromSource:UIImagePickerControllerSourceTypeCamera];
+            }
+            if ([title isEqualToString:CHOOSEPHOTO_STRING]) {
+                [self acquirePhotoFromSource:UIImagePickerControllerSourceTypePhotoLibrary];
+            }
         }
     }
     
